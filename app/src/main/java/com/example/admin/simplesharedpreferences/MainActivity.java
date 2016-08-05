@@ -2,6 +2,8 @@ package com.example.admin.simplesharedpreferences;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -29,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String url = "http://www.mocky.io/v2/57a4dfb40f0000821dc9a3b8";
     private static final String TAG = MainActivity.class.getSimpleName() + "TAG_";
     public static final String KEY_STUDENT = "KEYVALUE";
+    private static final String USER_KEY = "USER_KEY";
+    private static final String PASS_KEY = "PASS_KEY";
 
     private EditText mName;
     private EditText mPass;
@@ -87,6 +91,10 @@ public class MainActivity extends AppCompatActivity {
                 Type listType = new TypeToken<List<Student>>() {}.getType();
                 mStudent = gson.fromJson(json, listType);
 
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+                String user = sharedPreferences.getString(USER_KEY, null);
+                String pass = sharedPreferences.getString(PASS_KEY, null);
+                validateUser(user,pass);
             }
         });
     }
@@ -101,9 +109,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void goToDetailsActivity(Student student) {
+        saveSharedPreferences(student);
+
         Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra(KEY_STUDENT, student);
         startActivity(intent);
+    }
+
+    private void saveSharedPreferences(Student student) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putString(USER_KEY, student.name);
+        editor.putString(PASS_KEY, student.password);
+
+        editor.apply();
     }
 
     private boolean compareUserCredentials(Student student, String user, String password) {
