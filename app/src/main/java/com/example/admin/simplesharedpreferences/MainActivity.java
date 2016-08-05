@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText mName;
     private EditText mPass;
     private Context mContext;
+    private ArrayList<Student> mStudent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,12 +41,33 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mContext = getApplicationContext();
+
+        getInfoFromServer();
     }
 
     public void doMagic(View view) {
         mName = (EditText) findViewById(R.id.a_main_name);
         mPass = (EditText) findViewById(R.id.a_main_pass);
+        validateUser(mName.getText().toString(),
+                mPass.getText().toString());
+    }
 
+    private void validateUser(String name, String pass) {
+        boolean authenticated = false;
+
+        for (Student student : mStudent) {
+            if (compareUserCredentials(student, name, pass)) {
+                goToDetailsActivity(student);
+                authenticated = true;
+                break;
+            }
+        }
+        if (!authenticated) {
+            showFailedCredentials();
+        }
+    }
+
+    private void getInfoFromServer(){
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
                 .url(url)
@@ -63,19 +85,8 @@ public class MainActivity extends AppCompatActivity {
                 String json = response.body().string();
                 Gson gson = new GsonBuilder().create();
                 Type listType = new TypeToken<List<Student>>() {}.getType();
-                ArrayList<Student> students = gson.fromJson(json, listType);
-                boolean authenticated = false;
+                mStudent = gson.fromJson(json, listType);
 
-                for (Student student : students) {
-                    if (compareUserCredentials(student, mName.getText().toString(), mPass.getText().toString())) {
-                        goToDetailsActivity(student);
-                        authenticated = true;
-                        break;
-                    }
-                }
-                if (!authenticated) {
-                    showFailedCredentials();
-                }
             }
         });
     }
